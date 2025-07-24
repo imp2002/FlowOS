@@ -22,4 +22,4 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
 # 启动 FastAPI 服务
-CMD ["/bin/bash", "-c", "source .venv/bin/activate && uvicorn proxy:app --host 0.0.0.0 --port 8000"] 
+CMD ["/bin/bash", "-c", "source .venv/bin/activate && uvicorn api:app --host 0.0.0.0 --port 8000"] 

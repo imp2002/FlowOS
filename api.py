@@ -4,6 +4,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from openai import OpenAI
 from dotenv import load_dotenv
+from chat.assistant import Assistant
+from typing import Optional, List
 
 # 从 .env 文件加载环境变量
 load_dotenv()
@@ -19,6 +21,13 @@ class ImageQuery(BaseModel):
 # 定义返回给客户端的响应体结构
 class DescriptionResponse(BaseModel):
     description: str
+
+class AssistantChatRequest(BaseModel):
+    session_id: Optional[str] = Field(None, description="可选，会话ID，复用则记忆上下文")
+    messages: List[str] = Field(..., description="消息历史，最后一条为当前用户输入")
+
+class AssistantChatResponse(BaseModel):
+    response: str
 
 
 app = FastAPI(
@@ -79,6 +88,23 @@ async def describe_image(query: ImageQuery):
     except Exception as e:
         # 如果调用Kimi API出错，则返回一个 HTTP 500 错误
         print(f"调用Kimi API时发生错误: {e}")
+        raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
+
+
+@app.post("/chat-assistant", response_model=AssistantChatResponse)
+async def chat_assistant(query: AssistantChatRequest):
+    """
+    使用 Assistant 聊天能力。
+    assistant_type: 助手类型，如 'general'。
+    session_id: 可选，会话ID。
+    messages: 聊天消息历史。
+    """
+    try:
+        assistant = Assistant("general", query.session_id)
+        response = assistant.chat(query.messages)
+        return AssistantChatResponse(response=response)
+    except Exception as e:
+        print(f"调用Assistant时发生错误: {e}")
         raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
 
 

@@ -1,0 +1,51 @@
+DeepSeek-R1: # 展示在界面上的名称
+  type: "deepseek" # 模型提供商
+  model_name: "deepseek-reasoner" # 接口调用需要传入的 model name
+  temperature: 0.3 # 温度
+  max_tokens: 8000 # 最大tokens
+  api_key: "${DEEPSEEK_API_KEY}" # 模型api key 不要在这里填，请在 .env 文件中配置，会自动注入到这里
+
+DeepSeek-V3: 
+  type: "deepseek"
+  model_name: "deepseek-chat"
+  temperature: 0.3
+  max_tokens: 8000
+  api_key: "${DEEPSEEK_API_KEY}"
+    
+Qwen-Max:
+  type: "aliyun"
+  model_name: "qwen-max"
+  temperature: 0.3
+  max_tokens: 8000
+  api_key: "${ALIYUN_API_KEY}"
+    
+Ollama-Qwen-0.5B:
+  type: "ollama"
+  model_name: "qwen:0.5b"
+  temperature: 0.7
+  max_tokens: 8000
+  api_base: "http://127.0.0.1:11434"
+    
+custom-model:
+  type: "custom"
+  model_name: "your-model-name"
+  temperature: 0.3
+  max_tokens: 8000
+  api_base: "https://your-api-endpoint.com/v1"
+  api_key: "${CUSTOM_API_KEY}"
+
+Qwen-PLUS:
+  type: "aliyun"
+  model_name: "qwen-plus"
+  temperature: 0.7
+  max_tokens: 8000
+  api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  api_key: "${ALIYUN_API_KEY}"
+
+XunFei-generalv3.5:
+  type: "xunfei"
+  model_name: "generalv3.5"
+  temperature: 0.3
+  max_tokens: 8000
+  api_base: "https://spark-api-open.xf-yun.com/v1/"
+  api_key: "${XUNFEI_API_KEY}"

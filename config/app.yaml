@@ -1,0 +1,17 @@
+# 应用基础信息
+
+# 应用名称
+name: 方德AI助手
+# 应用版本  
+version: "3.0.0"
+# 应用描述
+description: |
+  是一款集成了自然语言处理、智能绘图及会议纪要等多种功能的AI代理
+  智能助手, 以优质的AI大模型接入效果为用户打造丰富的服务体验。
+
+
+  © 2024中科方德软件有限公司
+
+# logo 相对根目录的路径
+# logo: "ui/icon/icon_标题栏_app_logo_小苏版.png" 
+logo: "ui/icon/icon_标题栏_app_logo.png" 

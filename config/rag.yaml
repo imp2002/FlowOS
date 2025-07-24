@@ -1,0 +1,26 @@
+vector_db:
+  type: "chroma"
+  collection_name: "documents"
+  persist_directory: "~/.nfs-ai/chroma_db"
+
+embeddings:
+  type: "dashscope"
+  model: "text-embedding-v3"
+  api_key: "${ALIYUN_API_KEY}"
+  
+chunk_size: 128
+chunk_overlap: 32
+supported_file_types: 
+  - ".txt"
+  - ".pdf"
+  - ".docx"
+  - ".md"
+  - ".xlsx"
+self_rag: false
+feedback:
+  type: "aliyun"
+  api_key: "${ALIYUN_API_KEY}"
+  model_name: "qwen-plus"
+  temperature: 0.7 
+  max_tokens: 2000
+  api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"

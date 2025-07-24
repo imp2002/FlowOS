@@ -1,0 +1,19 @@
+[project]
+name = "er"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "chromadb>=1.0.15",
+    "dashscope>=1.24.0",
+    "dotenv>=0.9.9",
+    "fastapi>=0.116.1",
+    "langchain-chroma>=0.2.5",
+    "langchain-community>=0.3.27",
+    "langchain-deepseek>=0.1.4",
+    "langchain-ollama>=0.3.6",
+    "langchain-openai>=0.3.28",
+    "openai>=1.97.1",
+    "uvicorn>=0.35.0",
+]

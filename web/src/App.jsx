@@ -757,18 +757,6 @@ function App() {
       <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/50 px-6 py-5 shadow-sm">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            {/* 推荐联系人按钮 */}
-            <button
-              onClick={handleChatPushContacts}
-              className="group flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/50 hover:border-blue-300/50 rounded-lg transition-all duration-200 text-sm font-medium text-blue-700 hover:text-blue-800 shadow-sm hover:shadow-md"
-            >
-              <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded flex items-center justify-center">
-                <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-                </svg>
-              </div>
-              <span>推荐联系人</span>
-            </button>
             
             <h1 className={`font-semibold text-slate-800 ${
               isMobile ? 'text-lg' : 'text-xl'
@@ -809,18 +797,6 @@ function App() {
            </div>
           {/* 清新的按钮区域 */}
            <div className="flex items-center space-x-3">
-             <button
-               onClick={testChatAssistant}
-               className="group flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200/50 hover:border-green-300/50 rounded-lg transition-all duration-200 text-sm font-medium text-green-700 hover:text-green-800 shadow-sm hover:shadow-md"
-               disabled={loading}
-             >
-               <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded flex items-center justify-center">
-                 <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                 </svg>
-               </div>
-               <span>{loading ? '测试中...' : '测试API'}</span>
-             </button>
              <button
                onClick={clearHistory}
                className="text-sm text-slate-600 hover:text-slate-800 px-3 py-2 rounded-lg hover:bg-slate-100 transition-all duration-200 font-medium"

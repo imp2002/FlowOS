@@ -65,8 +65,7 @@ app.add_middleware(
     allow_headers=["*"],        # 允许任何请求头
 )
 
-# 挂载静态文件到根路径
-app.mount("/", StaticFiles(directory="web/build", html=True), name="static")
+
 
 @app.post("/describe-image", response_model=DescriptionResponse)
 async def describe_image(query: ImageQuery):
@@ -170,6 +169,8 @@ async def upload_document(
         return DocumentUploadResponse(success=False, message=f"上传失败: {str(e)}")
 
 
+# 挂载静态文件到根路径
+app.mount("/", StaticFiles(directory="web/build", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

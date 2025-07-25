@@ -23,6 +23,10 @@ export const storageService = {
     localStorage.setItem('adventurex-user-profile', JSON.stringify(profile));
   },
   
+  clearUserProfile: () => {
+    localStorage.removeItem('adventurex-user-profile');
+  },
+  
   // 匹配结果相关
   getMatchResults: () => {
     const saved = localStorage.getItem('adventurex-match-results');
@@ -31,5 +35,27 @@ export const storageService = {
   
   saveMatchResults: (results) => {
     localStorage.setItem('adventurex-match-results', JSON.stringify(results));
+  },
+  
+  clearMatchResults: () => {
+    localStorage.removeItem('adventurex-match-results');
+  },
+
+  // 访问人次相关
+  getVisitorCount: () => {
+    const saved = localStorage.getItem('adventurex-visitor-count');
+    return saved ? parseInt(saved, 10) : 0;
+  },
+
+  incrementVisitorCount: () => {
+    const currentCount = storageService.getVisitorCount();
+    const newCount = currentCount + 1;
+    localStorage.setItem('adventurex-visitor-count', newCount.toString());
+    return newCount;
+  },
+
+  resetVisitorCount: () => {
+    localStorage.removeItem('adventurex-visitor-count');
+    return 0;
   }
 };

@@ -84,6 +84,8 @@ function App() {
   const [showContactPush, setShowContactPush] = useState(false);
   const [conversationHistory, setConversationHistory] = useState([]); // 新增：对话历史数组
   const [showPersonCards, setShowPersonCards] = useState(true); // 新增：控制右侧卡片显示
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // 新增：控制欢迎弹窗显示
+  const [visitorCount, setVisitorCount] = useState(0); // 新增：访问人次状态
   const messagesEndRef = useRef(null);
 
   // 使用自定义 hooks
@@ -91,32 +93,35 @@ function App() {
 
   // 初始化数据
   useEffect(() => {
-    const savedMessages = storageService.getMessages();
-    const savedProfile = storageService.getUserProfile();
-    const savedMatches = storageService.getMatchResults();
+    // 增加访问人次
+    const newVisitorCount = storageService.incrementVisitorCount();
+    setVisitorCount(newVisitorCount);
     
-    if (savedMessages.length > 0) {
-      setMessages(savedMessages);
-    } else {
-      // 添加示例对话
-      const exampleMessages = [
-        {
-          id: 1,
-          type: MESSAGE_TYPES.AI,
-          content: '欢迎使用AdventureX人员搜索！🔍\n\n请告诉我您需要什么样的人，比如：\n• "给我找一些后端工程师"\n• "我需要会Python的开发者"\n• "找一些有创意的设计师"\n\n我会为您搜索并推荐合适的候选人！',
-          timestamp: new Date().toLocaleTimeString()
-        }
-      ];
-      setMessages(exampleMessages);
-    }
+    // 清除所有历史数据，确保每次都是全新状态
+    storageService.clearMessages();
+    storageService.clearUserProfile();
+    storageService.clearMatchResults();
+    localStorage.removeItem('hasShownWelcome');
     
-    if (savedProfile) {
-      setUserProfile(savedProfile);
-    }
-    if (savedMatches.length > 0) {
-      setMatchResults(savedMatches);
-      setShowResults(true);
-    }
+    // 重置所有状态
+    setShowResults(false);
+    setShowPersonCards(false);
+    setMatchResults([]);
+    setUserProfile(null);
+    
+    // 显示欢迎弹窗
+    setShowWelcomeModal(true);
+    
+    // 添加示例对话
+    const exampleMessages = [
+      {
+        id: 1,
+        type: MESSAGE_TYPES.AI,
+        content: '欢迎使用搭子人员搜索！🔍\n\n请告诉我您需要什么样的搭子，比如：\n• "给我找一些后端工程师"\n• "我需要会Python的开发者"\n• "找一些有创意的设计师"\n\n我会为您搜索并推荐合适的搭子！',
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ];
+    setMessages(exampleMessages);
   }, []);
 
   // 保存数据到localStorage
@@ -178,7 +183,7 @@ function App() {
       ],
       [CONVERSATION_STAGES.FINAL]: [
         `太棒了！我已经收集到足够的信息，正在为您进行智能匹配...\n\n🎉 匹配完成！为您找到了几位高度契合的潜在队友，匹配度都在85%以上！${isMobile ? '请查看下方的推荐卡片' : '请查看右侧的匹配结果'}，您可以选择感兴趣的联系人进行推送！`,
-        `完美！基于您的详细需求，匹配系统已经为您筛选出最合适的候选人。\n\n✅ 个性化匹配已完成\n✅ 高质量推荐已生成\n✅ 联系人信息已准备\n\n${isMobile ? '请查看下方推荐卡片' : '请查看匹配结果'}，选择您感兴趣的联系人进行推送！`
+        `完美！基于您的详细需求，匹配系统已经为您筛选出最合适的搭子。\n\n✅ 个性化匹配已完成\n✅ 高质量推荐已生成\n✅ 联系人信息已准备\n\n${isMobile ? '请查看下方推荐卡片' : '请查看匹配结果'}，选择您感兴趣的联系人进行推送！`
       ]
     };
     
@@ -237,7 +242,7 @@ function App() {
         let displayContent = `✅ 为您找到了 ${peopleData.length} 位合适的人员！\n\n`;
         
         peopleData.forEach((person, index) => {
-          displayContent += `👤 **候选人 ${index + 1}**\n`;
+          displayContent += `👤 **搭子 ${index + 1}**\n`;
           displayContent += `• 姓名：${person.name || '未提供'}\n`;
           displayContent += `• 描述：${person.description || '未提供'}\n`;
           if (person.MBTI) displayContent += `• MBTI：${person.MBTI}\n`;
@@ -246,7 +251,7 @@ function App() {
           displayContent += `\n`;
         });
         
-        displayContent += `🎯 以上候选人都很符合您的需求！`;
+        displayContent += `🎯 以上搭子都很符合您的需求！`;
         
         // 更新消息显示结果
         setMessages(prev => prev.map(msg => 
@@ -307,7 +312,7 @@ function App() {
     setMessages([{
       id: 1,
       type: MESSAGE_TYPES.AI,
-      content: '欢迎使用AdventureX人员搜索！🔍\n\n请告诉我您需要什么样的人，比如：\n• "给我找一些后端工程师"\n• "我需要会Python的开发者"\n• "找一些有创意的设计师"\n\n我会为您搜索并推荐合适的候选人！',
+      content: '欢迎使用AdventureX人员搜索！🔍\n\n请告诉我您需要什么样的人，比如：\n• "给我找一些后端工程师"\n• "我需要会Python的开发者"\n• "找一些有创意的设计师"\n\n我会为您搜索并推荐合适的搭子！',
       timestamp: new Date().toLocaleTimeString()
     }]);
     setUserProfile(null);
@@ -383,43 +388,13 @@ function App() {
     setShowContactPush(false);
   };
 
-  // 处理聊天界面的联系人推送
-  const handleChatPushContacts = async () => {
-    try {
-      // 模拟调用后端接口
-      console.log('调用后端接口推送联系人信息...');
-      
-      // 这里可以添加实际的API调用
-      // const response = await apiService.pushContactInfo(userProfile);
-      
-      const pushMessage = {
-        id: Date.now(),
-        type: MESSAGE_TYPES.AI,
-        content: '📱 已通过后端接口推送您的联系人基本信息！系统会自动匹配合适的用户并建立联系。',
-        timestamp: new Date().toLocaleTimeString(),
-        isPushNotification: true
-      };
-      
-      setMessages(prev => [...prev, pushMessage]);
-      
-      // 显示成功提示
-      alert('联系人信息推送成功！');
-      
-    } catch (error) {
-      console.error('推送联系人信息失败:', error);
-      
-      const errorMessage = {
-        id: Date.now(),
-        type: MESSAGE_TYPES.AI,
-        content: '❌ 推送联系人信息失败，请稍后重试。',
-        timestamp: new Date().toLocaleTimeString(),
-        isError: true
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-      alert('推送失败，请稍后重试！');
-    }
+  // 处理欢迎弹窗关闭
+  const handleWelcomeModalClose = () => {
+    setShowWelcomeModal(false);
+    localStorage.setItem('hasShownWelcome', 'true');
   };
+
+
 
   // 快速开始
   const handleQuickStart = (text) => {
@@ -427,55 +402,7 @@ function App() {
     setTimeout(() => handleSendMessage(), 100);
   };
 
-  // 测试聊天助手API
-  const testChatAssistant = async () => {
-    try {
-      setLoading(true);
-      
-      const testMessage = {
-        id: Date.now(),
-        type: MESSAGE_TYPES.AI,
-        content: '🧪 正在测试聊天助手API...',
-        timestamp: new Date().toLocaleTimeString(),
-        isLoading: true
-      };
-      setMessages(prev => [...prev, testMessage]);
-      
-      // 调用新的askChatAssistant API
-      const result = await apiService.askChatAssistant(
-        "请给我推荐几个喜欢动漫的朋友", 
-        'test-session'
-      );
-      
-      // 更新消息显示结果
-      setMessages(prev => prev.map(msg => 
-        msg.id === testMessage.id 
-          ? {
-              ...msg,
-              content: `✅ API测试成功！\n\n📋 **测试结果：**\n${JSON.stringify(result, null, 2)}`,
-              isLoading: false,
-              isTestResult: true
-            }
-          : msg
-      ));
-      
-    } catch (error) {
-      console.error('测试失败:', error);
-      
-      setMessages(prev => prev.map(msg => 
-        msg.isLoading 
-          ? {
-              ...msg,
-              content: `❌ API测试失败\n\n**错误信息：**\n${error.message}`,
-              isLoading: false,
-              isError: true
-            }
-          : msg
-      ));
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   // 渲染内联推荐卡片
   const renderInlineMatchCards = (matches, profile) => {
@@ -539,34 +466,12 @@ function App() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">
-                  {match.matchScore}% 匹配
-                </div>
+
               </div>
               <div className="text-xs text-gray-700 mb-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
                 <span className="font-medium text-gray-800">兴趣：</span>{match.interests.slice(0, 3).join('、')}
               </div>
-              <div className="flex space-x-2">
-                <button className="flex-1 text-xs bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 py-2 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center space-x-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                  </svg>
-                  <span>发起聊天</span>
-                </button>
-                <button 
-                  onClick={() => toggleContactSelection(match.id)}
-                  className={`flex-1 text-xs px-3 py-2 rounded-lg transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center space-x-1 ${
-                    selectedContacts.includes(match.id)
-                      ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
-                      : 'bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 hover:from-gray-300 hover:to-gray-400'
-                  }`}
-                >
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  <span>{selectedContacts.includes(match.id) ? '已选择' : '选择联系人'}</span>
-                </button>
-              </div>
+
             </div>
           ))}
         </div>
@@ -591,8 +496,8 @@ function App() {
   // 渲染匹配结果
   const renderMatchResults = () => {
     return (
-      <div className="w-1/2 bg-white border-l border-gray-200 p-6 overflow-y-auto">
-        <div className="space-y-6">
+      <div className="fixed top-0 right-0 w-1/2 h-full bg-white/10 backdrop-blur-sm border-l border-white/20 p-6 overflow-y-auto z-20">
+        <div className="space-y-6 pt-20">
           {/* 用户画像分析 */}
           {userProfile && (
             <div className="bg-blue-50 rounded-lg p-4">
@@ -661,23 +566,10 @@ function App() {
                       <div>
                         <h4 className="text-xl font-bold text-gray-800 group-hover:text-emerald-800 transition-colors duration-300">{match.name}</h4>
                         <p className="text-sm text-gray-600 mb-2">{match.age}岁 · {match.university} · {match.major}</p>
-                        <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-1">
-                            {[...Array(5)].map((_, i) => (
-                              <svg key={i} className={`w-4 h-4 ${i < Math.floor(match.matchScore / 20) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
-                          </div>
-                          <span className="text-sm text-emerald-600 font-medium">{match.matchScore}% 匹配</span>
-                        </div>
+
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold border border-emerald-200 shadow-sm">
-                        {match.matchScore}% 匹配
-                      </div>
-                    </div>
+
                   </div>
                   
                   <div className="mb-4 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
@@ -691,27 +583,7 @@ function App() {
                     </p>
                   </div>
                   
-                  <div className="flex space-x-3">
-                    <button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                      </svg>
-                      <span>发起聊天</span>
-                    </button>
-                    <button 
-                      onClick={() => toggleContactSelection(match.id)}
-                      className={`flex-1 px-4 py-3 rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2 ${
-                        selectedContacts.includes(match.id)
-                          ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
-                          : 'bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 hover:from-gray-300 hover:to-gray-400'
-                      }`}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                      </svg>
-                      <span>{selectedContacts.includes(match.id) ? '已选择联系人' : '选择联系人'}</span>
-                    </button>
-                  </div>
+
                 </div>
               ))}
             </div>
@@ -753,55 +625,122 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-purple-50 to-slate-100 flex flex-col">
-      {/* 顶部标题栏 - 清新简约风格 */}
-      <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/50 px-6 py-5 shadow-sm">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            
+      {/* 欢迎弹窗 */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+            <div className="p-8">
+              {/* 弹窗头部 */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">欢迎使用 FlowOS！</h2>
+                <p className="text-gray-600 text-sm">让我们帮您找到最合适的搭子</p>
+              </div>
+              
+              {/* 使用建议 */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  <svg className="w-5 h-5 text-purple-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  使用建议
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-purple-600 text-sm font-bold">1</span>
+                    </div>
+                    <div>
+                      <p className="text-gray-700 font-medium">先进行自我描述</p>
+                      <p className="text-gray-600 text-sm">告诉我们您的技能、兴趣和期望</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-pink-600 text-sm font-bold">2</span>
+                    </div>
+                    <div>
+                      <p className="text-gray-700 font-medium">描述理想搭子</p>
+                      <p className="text-gray-600 text-sm">说明您希望找到什么样的人</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-indigo-600 text-sm font-bold">3</span>
+                    </div>
+                    <div>
+                      <p className="text-gray-700 font-medium">获得精准匹配</p>
+                      <p className="text-gray-600 text-sm">我们会为您推荐最合适的搭子</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 示例输入 */}
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">💡 示例输入：</h4>
+                <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600 leading-relaxed">
+                  "我是一名前端开发者，熟悉React和Vue，希望找一些后端工程师合作开发项目，最好有Python或Node.js经验。"
+                </div>
+              </div>
+              
+              {/* 关闭按钮 */}
+              <button
+                onClick={handleWelcomeModalClose}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                开始使用 FlowOS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 顶部标题栏 - 移动端优化 */}
+      <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
+        <div className={`max-w-6xl mx-auto flex justify-between items-center ${
+          isMobile ? 'px-4 py-3' : 'px-6 py-5'
+        }`}>
+          <div className={`flex items-center ${
+            isMobile ? 'space-x-2' : 'space-x-4'
+          }`}>
             <h1 className={`font-semibold text-slate-800 ${
               isMobile ? 'text-lg' : 'text-xl'
             }`}>
               FlowOS
-
-             </h1>
-             
-             {/* 简洁的对话进度指示器 */}
-             <div className="flex items-center mt-2 space-x-4">
-               <div className="flex items-center space-x-1.5">
-                 <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                   conversationStage === CONVERSATION_STAGES.INITIAL ? 'bg-rose-400' : 
-                   conversationStage === CONVERSATION_STAGES.REFINING || conversationStage === CONVERSATION_STAGES.FINAL ? 'bg-emerald-400' : 'bg-slate-300'
-                 }`}></div>
-                 <span className={`text-xs font-medium ${
-                   conversationStage === CONVERSATION_STAGES.INITIAL ? 'text-rose-600' : 'text-slate-500'
-                 }`}>初步了解</span>
-               </div>
-               <div className="flex items-center space-x-1.5">
-                 <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                   conversationStage === CONVERSATION_STAGES.REFINING ? 'bg-rose-400' : 
-                   conversationStage === CONVERSATION_STAGES.FINAL ? 'bg-emerald-400' : 'bg-slate-300'
-                 }`}></div>
-                 <span className={`text-xs font-medium ${
-                   conversationStage === CONVERSATION_STAGES.REFINING ? 'text-rose-600' : 'text-slate-500'
-                 }`}>深度对话</span>
-               </div>
-               <div className="flex items-center space-x-1.5">
-                 <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                   conversationStage === CONVERSATION_STAGES.FINAL ? 'bg-emerald-400' : 'bg-slate-300'
-                 }`}></div>
-                 <span className={`text-xs font-medium ${
-                   conversationStage === CONVERSATION_STAGES.FINAL ? 'text-emerald-600' : 'text-slate-500'
-                 }`}>匹配完成</span>
-               </div>
-             </div>
+            </h1>
+            
+            {/* 信息收集按钮 - 移动端优化 */}
+            <a
+              href="https://ks2ynpxs58.feishu.cn/share/base/form/shrcnIvEYJvxlZOyoroqvBD2cne"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 font-medium ${
+                isMobile 
+                  ? 'space-x-1 px-2 py-1.5 text-xs' 
+                  : 'space-x-2 px-3 py-2 text-sm'
+              }`}
+            >
+              <svg className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className={isMobile ? 'hidden sm:inline' : ''}>信息收集</span>
+            </a>
            </div>
-          {/* 清新的按钮区域 */}
+          {/* 清新的按钮区域 - 移动端优化 */}
            <div className="flex items-center space-x-3">
              <button
                onClick={clearHistory}
-               className="text-sm text-slate-600 hover:text-slate-800 px-3 py-2 rounded-lg hover:bg-slate-100 transition-all duration-200 font-medium"
+               className={`text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-all duration-200 font-medium ${
+                 isMobile 
+                   ? 'text-xs px-2 py-1.5' 
+                   : 'text-sm px-3 py-2'
+               }`}
              >
-               清除历史
+               {isMobile ? '清除' : '清除历史'}
              </button>
            </div>
         </div>
@@ -809,7 +748,7 @@ function App() {
 
       <div className="flex-1 flex">
         {/* 左侧：对话区域 */}
-        <div className={`${(showResults || showPersonCards) && !isMobile ? 'w-1/2' : 'w-full'} flex flex-col transition-all duration-300`}>
+        <div className={`${(showResults || showPersonCards) && !isMobile ? 'w-1/2 pr-0' : 'w-full'} flex flex-col transition-all duration-300 bg-gradient-to-br from-slate-50 to-purple-50/30`}>
           {/* 聊天消息区域 */}
           <div className="flex-1 overflow-y-auto px-4 py-3">
 
@@ -820,66 +759,112 @@ function App() {
                     <div className="text-5xl mb-4 opacity-80">💬</div>
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-200 to-violet-200 opacity-20 rounded-full blur-2xl"></div>
                   </div>
-                  <h2 className="text-2xl font-light text-slate-800 mb-3">AI人员搜索</h2>
+                  <h2 className="text-2xl font-light text-slate-800 mb-3">AI搭子</h2>
                   <p className="text-slate-500 mb-8 max-w-lg mx-auto leading-relaxed">通过智能搜索快速找到符合您需求的专业人才</p>
                   
-                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 text-left max-w-3xl mx-auto shadow-lg border border-slate-200/50">
-                    <div className="flex items-center space-x-3 mb-6">
-                      <div className="w-6 h-6 bg-gradient-to-r from-rose-400 to-violet-400 rounded-lg flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <div className={`bg-white/80 backdrop-blur-sm rounded-2xl text-left mx-auto shadow-lg border border-slate-200/50 ${
+                    isMobile ? 'p-4 max-w-sm' : 'p-6 max-w-3xl'
+                  }`}>
+                    <div className={`flex items-center space-x-3 ${
+                      isMobile ? 'mb-4' : 'mb-6'
+                    }`}>
+                      <div className={`bg-gradient-to-r from-rose-400 to-violet-400 rounded-lg flex items-center justify-center ${
+                        isMobile ? 'w-5 h-5' : 'w-6 h-6'
+                      }`}>
+                        <svg className={`text-white ${
+                          isMobile ? 'w-3 h-3' : 'w-3.5 h-3.5'
+                        }`} fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-medium text-slate-700">快速开始示例</h3>
+                      <h3 className={`font-medium text-slate-700 ${
+                        isMobile ? 'text-base' : 'text-lg'
+                      }`}>快速开始示例</h3>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
                       <button 
                         onClick={() => handleQuickStart('给我找一些后端工程师')}
-                        className="group w-full text-left p-4 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-xl border border-blue-200/50 hover:border-blue-300/50 hover:shadow-md transition-all duration-200 text-sm"
+                        className={`group w-full text-left bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-xl border border-blue-200/50 hover:border-blue-300/50 hover:shadow-md transition-all duration-200 ${
+                          isMobile ? 'p-3 text-xs' : 'p-4 text-sm'
+                        }`}
                       >
-                        <div className="flex items-start space-x-3">
-                          <div className="w-7 h-7 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center text-white text-xs font-medium">💻</div>
+                        <div className={`flex items-start ${
+                          isMobile ? 'space-x-2' : 'space-x-3'
+                        }`}>
+                          <div className={`bg-gradient-to-r from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center text-white font-medium ${
+                            isMobile ? 'w-6 h-6 text-xs' : 'w-7 h-7 text-xs'
+                          }`}>💻</div>
                           <div className="flex-1">
-                            <p className="text-slate-700 font-medium leading-relaxed">"给我找一些后端工程师"</p>
-                            <p className="text-xs text-blue-600 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">点击搜索技术人才</p>
+                            <p className={`text-slate-700 font-medium leading-relaxed ${
+                              isMobile ? 'text-xs' : 'text-sm'
+                            }`}>"给我找一些后端工程师"</p>
+                            <p className={`text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+                              isMobile ? 'text-xs mt-1' : 'text-xs mt-1.5'
+                            }`}>点击搜索技术人才</p>
                           </div>
                         </div>
                       </button>
                       
                       <button 
                         onClick={() => handleQuickStart('我需要会Python和机器学习的开发者')}
-                        className="group w-full text-left p-4 bg-gradient-to-r from-violet-50 to-purple-50 hover:from-violet-100 hover:to-purple-100 rounded-xl border border-violet-200/50 hover:border-violet-300/50 hover:shadow-md transition-all duration-200 text-sm"
+                        className={`group w-full text-left bg-gradient-to-r from-violet-50 to-purple-50 hover:from-violet-100 hover:to-purple-100 rounded-xl border border-violet-200/50 hover:border-violet-300/50 hover:shadow-md transition-all duration-200 ${
+                          isMobile ? 'p-3 text-xs' : 'p-4 text-sm'
+                        }`}
                       >
-                        <div className="flex items-start space-x-3">
-                          <div className="w-7 h-7 bg-gradient-to-r from-violet-400 to-purple-500 rounded-lg flex items-center justify-center text-white text-xs font-medium">🤖</div>
+                        <div className={`flex items-start ${
+                          isMobile ? 'space-x-2' : 'space-x-3'
+                        }`}>
+                          <div className={`bg-gradient-to-r from-violet-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-medium ${
+                            isMobile ? 'w-6 h-6 text-xs' : 'w-7 h-7 text-xs'
+                          }`}>🤖</div>
                           <div className="flex-1">
-                            <p className="text-slate-700 font-medium leading-relaxed">"我需要会Python和机器学习的开发者"</p>
-                            <p className="text-xs text-violet-600 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">点击搜索AI专家</p>
+                            <p className={`text-slate-700 font-medium leading-relaxed ${
+                              isMobile ? 'text-xs' : 'text-sm'
+                            }`}>"我需要会Python和机器学习的开发者"</p>
+                            <p className={`text-violet-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+                              isMobile ? 'text-xs mt-1' : 'text-xs mt-1.5'
+                            }`}>点击搜索AI专家</p>
                           </div>
                         </div>
                       </button>
                       
                       <button 
                         onClick={() => handleQuickStart('找一些有创意的UI/UX设计师')}
-                        className="group w-full text-left p-4 bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 rounded-xl border border-emerald-200/50 hover:border-emerald-300/50 hover:shadow-md transition-all duration-200 text-sm"
+                        className={`group w-full text-left bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 rounded-xl border border-emerald-200/50 hover:border-emerald-300/50 hover:shadow-md transition-all duration-200 ${
+                          isMobile ? 'p-3 text-xs' : 'p-4 text-sm'
+                        }`}
                       >
-                        <div className="flex items-start space-x-3">
-                          <div className="w-7 h-7 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center text-white text-xs font-medium">🎨</div>
+                        <div className={`flex items-start ${
+                          isMobile ? 'space-x-2' : 'space-x-3'
+                        }`}>
+                          <div className={`bg-gradient-to-r from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-medium ${
+                            isMobile ? 'w-6 h-6 text-xs' : 'w-7 h-7 text-xs'
+                          }`}>🎨</div>
                           <div className="flex-1">
-                            <p className="text-slate-700 font-medium leading-relaxed">"找一些有创意的UI/UX设计师"</p>
-                            <p className="text-xs text-emerald-600 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">点击搜索设计人才</p>
+                            <p className={`text-slate-700 font-medium leading-relaxed ${
+                              isMobile ? 'text-xs' : 'text-sm'
+                            }`}>"找一些有创意的UI/UX设计师"</p>
+                            <p className={`text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+                              isMobile ? 'text-xs mt-1' : 'text-xs mt-1.5'
+                            }`}>点击搜索设计人才</p>
                           </div>
                         </div>
                       </button>
                     </div>
                     
-                    <div className="mt-6 p-4 bg-slate-50/50 rounded-xl border border-slate-200/50">
-                      <div className="flex items-center space-x-2 text-slate-600">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <div className={`bg-slate-50/50 rounded-xl border border-slate-200/50 ${
+                      isMobile ? 'mt-4 p-3' : 'mt-6 p-4'
+                    }`}>
+                      <div className={`flex items-center text-slate-600 ${
+                        isMobile ? 'space-x-1.5' : 'space-x-2'
+                      }`}>
+                        <svg className={isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm font-medium">点击示例开始，或在下方描述您的偏好</span>
+                        <span className={`font-medium ${
+                          isMobile ? 'text-xs' : 'text-sm'
+                        }`}>{isMobile ? '点击示例或描述需求' : '点击示例开始，或在下方描述您的偏好'}</span>
                       </div>
                     </div>
                   </div>
@@ -888,10 +873,12 @@ function App() {
                 messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.type === MESSAGE_TYPES.USER ? 'justify-end' : 'justify-start'} mb-4 group`}
+                    className={`flex ${message.type === MESSAGE_TYPES.USER ? 'justify-end' : 'justify-start'} group ${
+                      isMobile ? 'mb-3' : 'mb-4'
+                    }`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 group-hover:shadow-md relative ${
+                      className={`${isMobile ? 'max-w-[85%]' : 'max-w-xs lg:max-w-md'} ${isMobile ? 'px-3 py-2.5' : 'px-4 py-3'} rounded-2xl shadow-sm transition-all duration-200 group-hover:shadow-md relative ${
                         message.type === MESSAGE_TYPES.USER
                           ? 'bg-gradient-to-br from-purple-400 via-blue-400 to-indigo-500 text-white rounded-br-md shadow-lg'
                           : message.isError
@@ -901,22 +888,62 @@ function App() {
                           : 'bg-gradient-to-br from-gray-50 via-purple-50 to-pink-50 text-slate-700 border border-purple-200/30 rounded-bl-md shadow-sm'
                       }`}
                     >
-                      {/* AI message with icon */}
+                      {/* AI message with icon - 移动端优化 */}
                       {message.type === MESSAGE_TYPES.AI && !message.isError && !message.isPushNotification && (
-                        <div className="flex items-start space-x-2 mb-3">
-                          <div className="w-6 h-6 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <div className={`flex items-start space-x-2 ${
+                          isMobile ? 'mb-2' : 'mb-3'
+                        }`}>
+                          <div className={`bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm ${
+                            isMobile ? 'w-5 h-5' : 'w-6 h-6'
+                          }`}>
+                            <svg className={`text-white ${
+                              isMobile ? 'w-2.5 h-2.5' : 'w-3 h-3'
+                            }`} fill="currentColor" viewBox="0 0 20 20">
                               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                           </div>
-                          <div className="text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">FlowOS AI</div>
+                          <div className={`font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent ${
+                            isMobile ? 'text-xs' : 'text-sm'
+                          }`}>FlowOS AI</div>
                         </div>
                       )}
                       
-                      <div className={`text-sm leading-relaxed ${
+                      <div className={`leading-relaxed ${
+                        isMobile ? 'text-sm' : 'text-sm'
+                      } ${
                         message.type === MESSAGE_TYPES.USER ? 'font-medium' : 'font-normal'
                       }`}>
-                        {message.content}
+                        <div className="whitespace-pre-wrap">
+                          {message.content.split('\n').map((line, index) => {
+                            // 处理列表项
+                            if (line.startsWith('• ') || line.startsWith('→ ') || line.startsWith('✨ ') || line.startsWith('🎯 ')) {
+                              return (
+                                <div key={index} className="ml-2 mb-1">
+                                  {line}
+                                </div>
+                              );
+                            }
+                            // 处理标题行（包含 ** 的行）
+                            if (line.includes('**') && line.includes('**')) {
+                              const parts = line.split('**');
+                              return (
+                                <div key={index} className="mb-2">
+                                  {parts.map((part, partIndex) => 
+                                    partIndex % 2 === 1 ? 
+                                      <strong key={partIndex} className="font-semibold text-slate-800">{part}</strong> : 
+                                      part
+                                  )}
+                                </div>
+                              );
+                            }
+                            // 普通行
+                            return (
+                              <div key={index} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                                {line || '\u00A0'}
+                              </div>
+                            );
+                          })}
+                        </div>
                         {/* 流式输出动画效果 */}
                         {message.isStreaming && (
                           <span className="inline-flex items-center ml-1">
@@ -932,7 +959,9 @@ function App() {
                         renderInlineMatchCards(message.matchResults, message.userProfile)
                       )}
                       
-                      <div className={`text-xs mt-2 opacity-60 ${
+                      <div className={`mt-2 opacity-60 ${
+                        isMobile ? 'text-xs' : 'text-xs'
+                      } ${
                         message.type === MESSAGE_TYPES.USER 
                           ? 'text-blue-100 text-right' 
                           : message.isError
@@ -968,76 +997,63 @@ function App() {
             </div>
           </div>
 
-          {/* 底部输入区域 - 现代简约风格 */}
-          <div className="bg-gradient-to-t from-purple-50/50 to-white/80 border-t border-purple-200/30 px-6 py-4">
+          {/* 底部输入区域 - 移动端优化 */}
+          <div className={`bg-gradient-to-t from-purple-50/50 to-white/80 border-t border-purple-200/30 ${
+            isMobile ? 'px-3 py-3' : 'px-6 py-4'
+          }`}>
             <div className="max-w-4xl mx-auto">
               
-              {/* 现代化聊天输入框 */}
+              {/* 现代化聊天输入框 - 移动端优化 */}
               <div className="relative">
-                <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-purple-200/40 p-6 mx-4 transform transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+                <div className={`bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-purple-200/40 transform transition-all duration-300 hover:shadow-2xl ${
+                  isMobile 
+                    ? 'p-4 mx-2 hover:scale-[1.01]' 
+                    : 'p-6 mx-4 hover:scale-[1.02]'
+                }`}>
                   <div className="relative">
                     <textarea
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="请描述您需要什么样的人，例如：给我找一些后端工程师、我需要会Python的开发者、找一些有创意的设计师..."
-                      className="w-full px-6 py-4 pr-20 bg-gradient-to-r from-purple-50/50 to-pink-50/50 border border-purple-200/40 rounded-2xl focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-100/50 resize-none text-slate-700 placeholder-purple-400/70 transition-all duration-300 ease-out focus:scale-[1.01] focus:shadow-lg"
-                      rows="2"
-                      style={{ minHeight: '70px', maxHeight: '160px' }}
+                      placeholder={isMobile 
+                        ? "描述您需要的人才，如：后端工程师、Python开发者..."
+                        : "请描述您需要什么样的人，例如：给我找一些后端工程师、我需要会Python的开发者、找一些有创意的设计师..."
+                      }
+                      className={`w-full bg-gradient-to-r from-purple-50/50 to-pink-50/50 border border-purple-200/40 rounded-2xl focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-100/50 resize-none text-slate-700 placeholder-purple-400/70 transition-all duration-300 ease-out focus:scale-[1.01] focus:shadow-lg ${
+                        isMobile 
+                          ? 'px-4 py-3 pr-14 text-sm' 
+                          : 'px-6 py-4 pr-20 text-base'
+                      }`}
+                      rows={isMobile ? "1" : "2"}
+                      style={{ 
+                        minHeight: isMobile ? '50px' : '70px', 
+                        maxHeight: isMobile ? '120px' : '160px' 
+                      }}
                       disabled={loading}
                     />
                     
-                    {/* 现代化发送按钮 */}
+                    {/* 现代化发送按钮 - 移动端优化 */}
                     <button
                       onClick={handleSendMessage}
                       disabled={loading || !inputValue.trim()}
-                      className="absolute bottom-4 right-4 w-12 h-12 bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-500 hover:from-purple-500 hover:via-pink-500 hover:to-indigo-600 disabled:from-slate-300 disabled:to-slate-400 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:cursor-not-allowed flex items-center justify-center group transform hover:scale-110 active:scale-95"
+                      className={`absolute bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-500 hover:from-purple-500 hover:via-pink-500 hover:to-indigo-600 disabled:from-slate-300 disabled:to-slate-400 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:cursor-not-allowed flex items-center justify-center group transform hover:scale-110 active:scale-95 ${
+                        isMobile 
+                          ? 'bottom-3 right-3 w-10 h-10' 
+                          : 'bottom-4 right-4 w-12 h-12'
+                      }`}
                     >
                       {loading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <div className={`animate-spin rounded-full border-2 border-white border-t-transparent ${
+                          isMobile ? 'h-3 w-3' : 'h-4 w-4'
+                        }`}></div>
                       ) : (
-                        <svg className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`transform group-hover:translate-x-0.5 transition-transform duration-200 ${
+                          isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'
+                        }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
                       )}
                     </button>
-                  </div>
-                </div>
-                
-                {/* 简洁的状态指示器 */}
-                <div className="mt-6 flex items-center justify-center">
-                  <div className="flex items-center space-x-6">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                        loading ? 'bg-purple-400 animate-pulse shadow-lg' : 
-                        conversationStage === CONVERSATION_STAGES.INITIAL ? 'bg-slate-300' :
-                        conversationStage === CONVERSATION_STAGES.REFINING ? 'bg-purple-400 shadow-purple-200 shadow-lg' :
-                        'bg-pink-400 shadow-pink-200 shadow-lg'
-                      }`}></div>
-                      <span className="text-sm font-medium text-purple-600">
-                        {loading ? '分析中...' :
-                         conversationStage === CONVERSATION_STAGES.INITIAL ? '准备输入' :
-                         conversationStage === CONVERSATION_STAGES.REFINING ? '优化匹配' :
-                         '匹配完成'}
-                      </span>
-                    </div>
-                    
-                    {/* 简洁的匹配进度 */}
-                    {conversationStage !== CONVERSATION_STAGES.INITIAL && (
-                      <div className="flex items-center space-x-3">
-                        <span className="text-sm text-purple-500 font-medium">进度</span>
-                        <div className="w-20 h-2 bg-purple-100 rounded-full overflow-hidden shadow-inner">
-                          <div 
-                            className={`h-full transition-all duration-700 ease-out rounded-full shadow-sm ${
-                              conversationStage === CONVERSATION_STAGES.REFINING ? 'bg-gradient-to-r from-purple-400 to-pink-400 w-2/3' : 'bg-gradient-to-r from-pink-400 to-purple-500 w-full'
-                            }`}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-semibold text-purple-600">
-                          {conversationStage === CONVERSATION_STAGES.REFINING ? '66%' : '100%'}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1050,12 +1066,12 @@ function App() {
         
         {/* 右侧：人员卡片区域 (仅在非移动端显示) */}
         {showPersonCards && !isMobile && (
-          <div className="w-1/2 bg-gradient-to-br from-slate-50 to-purple-50/30 border-l border-purple-200/30 overflow-y-auto">
-            <div className="p-6">
+          <div className="fixed top-0 right-0 w-1/2 h-full bg-white/10 backdrop-blur-sm border-l border-white/20 overflow-y-auto z-20">
+            <div className="p-6 pt-20">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-slate-800 mb-1">推荐人员</h2>
-                  <p className="text-sm text-slate-600">为您精选的候选人</p>
+                  <p className="text-sm text-slate-600">为您精选的搭子</p>
                 </div>
                 <button 
                   onClick={() => setShowPersonCards(false)}
@@ -1086,6 +1102,17 @@ function App() {
         )}
       </div>
       
+      {/* 访问人次显示 - 仅在桌面端显示 */}
+      {!isMobile && (
+        <div className="fixed bottom-4 left-4 z-10">
+          <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/40 rounded-full shadow-lg backdrop-blur-sm">
+            <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
+            <span className="text-xs font-medium text-purple-600">
+              访问人次: {visitorCount.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      )}
 
     </div>
   );

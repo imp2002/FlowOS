@@ -141,7 +141,7 @@ export const apiService = {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: `${crypto.randomUUID()}-${Date.now()}`,
           messages: message
         })
       });

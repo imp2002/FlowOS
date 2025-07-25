@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from chat.assistant import Assistant
 from typing import Optional, List, Any
 from rag.rag_manager import RAGManager
+from fastapi.staticfiles import StaticFiles
+
 
 # 从 .env 文件加载环境变量
 load_dotenv()
@@ -52,6 +54,9 @@ client = OpenAI(
     api_key=api_key,
     base_url="https://api.moonshot.cn/v1",
 )
+
+# 挂载静态文件到根路径
+app.mount("/", StaticFiles(directory="web/build", html=True), name="static")
 
 @app.post("/describe-image", response_model=DescriptionResponse)
 async def describe_image(query: ImageQuery):
@@ -155,9 +160,6 @@ async def upload_document(
         return DocumentUploadResponse(success=False, message=f"上传失败: {str(e)}")
 
 
-@app.get("/")
-def read_root():
-    return {"message": "欢迎使用"}
 
 if __name__ == "__main__":
     import uvicorn

@@ -170,7 +170,7 @@ async def upload_document(
 
 
 # 挂载静态文件到根路径
-app.mount("/", StaticFiles(directory="web/assets", html=True), name="static")
+app.mount("/", StaticFiles(directory="web/build", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

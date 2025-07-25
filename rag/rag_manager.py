@@ -1,4 +1,5 @@
 import logging
+import pandas as pd
 from typing import Dict, Any, List, Optional
 import os
 from pathlib import Path
@@ -120,7 +121,7 @@ class RAGManager:
             results = self.vector_db.similarity_search_with_score(
                 query=query,
                 k=k,
-                filter=where_filter
+                # filter=where_filter
             )
             
             # Format results
@@ -138,7 +139,7 @@ class RAGManager:
             print(f"Error searching: {str(e)}")
             return []
     
-    def get_relevant_context(self, query: str, k: int = 3, knowledge_bases: Optional[List[str]] = None) -> str:
+    def get_relevant_context(self, query: str, k: int = 5, knowledge_bases: Optional[List[str]] = None) -> str:
         """Get relevant context as a concatenated string for use in prompts"""
         results = self.search(query, k, knowledge_bases)
         
@@ -241,11 +242,92 @@ class RAGManager:
             print(f"验证失败: {str(e)}")
             return False  # 默认返回不相关
 
+    def add_excel(self, file_path: str, doc_id: str, knowledge_base: str = "default") -> bool:
+        """
+        Efficiently parse a large Excel file by reading one sheet at a time and processing in row batches.
+        This avoids using unstructured and works with openpyxl.
+        """
+        import pandas as pd
+        from langchain_core.documents import Document
+        try:
+            xls = pd.ExcelFile(file_path)
+            chunk_size = 1000  # 可根据内存调整
+            all_documents = []
+            for sheet_name in xls.sheet_names:
+                df = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl', dtype=str)
+                df = df.fillna('')
+                n_rows = len(df)
+                for start in range(0, n_rows, chunk_size):
+                    end = min(start + chunk_size, n_rows)
+                    chunk = df.iloc[start:end]
+                    for idx, row in chunk.iterrows():
+                        page_content = '\t'.join(map(str, row.values))
+                        row_number = idx + 2  # header + 0-based
+                        doc = Document(
+                            page_content=page_content,
+                            metadata={
+                                'source': f"{Path(file_path).name}:{sheet_name}",
+                                'sheet_name': sheet_name,
+                                'row_number': row_number,
+                                'knowledge_base': knowledge_base
+                            }
+                        )
+                        all_documents.append(doc)
+            if not all_documents:
+                print("No documents found in the Excel file.")
+                return True
+            chunked_documents = self.document_processor.chunk_documents(all_documents)
+            for doc in chunked_documents:
+                if "knowledge_base" not in doc.metadata:
+                    doc.metadata["knowledge_base"] = knowledge_base
+            doc_ids = [f"{doc_id}-{idx}" for idx in range(len(chunked_documents))]
+            self.vector_db.add_documents(documents=chunked_documents, ids=doc_ids)
+            print(f"Successfully added {len(chunked_documents)} chunks from {file_path} to knowledge base '{knowledge_base}'.")
+            return True
+        except Exception as e:
+            print(f"Error adding Excel document: {str(e)}")
+            return False
+    
+    def add_json(self, file_path: str, doc_id: str, knowledge_base: str = "default") -> bool:
+        import json
+        from langchain_core.documents import Document
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            all_documents = []
+            for idx, item in enumerate(data):
+                # 你可以根据实际 JSON 结构自定义 page_content 和 metadata
+                page_content = item.get("msg", "")
+                name = item.get("name", "Unknown")
+                page_content = f"{name}: {page_content}"
+                doc = Document(
+                    page_content=page_content,
+                    metadata={
+                        "source": f"{Path(file_path).name}:{name}",
+                        "name": name,
+                        "knowledge_base": knowledge_base
+                    }
+                )
+                all_documents.append(doc)
+            if not all_documents:
+                print("No documents found in the JSON file.")
+                return True
+            chunked_documents = self.document_processor.chunk_documents(all_documents)
+            for doc in chunked_documents:
+                if "knowledge_base" not in doc.metadata:
+                    doc.metadata["knowledge_base"] = knowledge_base
+            doc_ids = [f"{doc_id}-{idx}" for idx in range(len(chunked_documents))]
+            self.vector_db.add_documents(documents=all_documents, ids=doc_ids)
+            print(f"Successfully added {len(chunked_documents)} chunks from {file_path} to knowledge base '{knowledge_base}'.")
+            return True
+        except Exception as e:
+            print(f"Error adding JSON document: {str(e)}")
+            return False
+
 if __name__ == "__main__":
     rag_manager = RAGManager()
     rag_manager.clear_database()
     # 在 kb1 中添加文档
-    rag_manager.add_document("rag/test.txt", doc_id="default", knowledge_base="default")
+    rag_manager.add_document("C:\\Users\\imp\\Desktop\\er\\rag\\report.docx", doc_id="default", knowledge_base="default")
     print(f"测试在kb1中检索: {rag_manager.get_relevant_context('吉林大学', k=3, knowledge_bases=['default'])}")
     print(f"测试在kb2中检索应该输出无检索结果: {rag_manager.get_relevant_context('吉林大学', k=3, knowledge_bases=['kb2'])}")
-

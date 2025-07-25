@@ -245,7 +245,7 @@ if __name__ == "__main__":
     rag_manager = RAGManager()
     rag_manager.clear_database()
     # 在 kb1 中添加文档
-    rag_manager.add_document("rag/test.txt", doc_id="default", knowledge_base="default")
+    rag_manager.add_document("rag/source.xlsx", doc_id="default", knowledge_base="default")
     print(f"测试在kb1中检索: {rag_manager.get_relevant_context('吉林大学', k=3, knowledge_bases=['default'])}")
     print(f"测试在kb2中检索应该输出无检索结果: {rag_manager.get_relevant_context('吉林大学', k=3, knowledge_bases=['kb2'])}")
 

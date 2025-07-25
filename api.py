@@ -1,11 +1,13 @@
 import os
 import base64
-from fastapi import FastAPI, HTTPException
+import json
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel, Field
 from openai import OpenAI
 from dotenv import load_dotenv
 from chat.assistant import Assistant
-from typing import Optional, List
+from typing import Optional, List, Any
+from rag.rag_manager import RAGManager
 
 # 从 .env 文件加载环境变量
 load_dotenv()
@@ -27,7 +29,11 @@ class AssistantChatRequest(BaseModel):
     messages: List[str] = Field(..., description="消息历史，最后一条为当前用户输入")
 
 class AssistantChatResponse(BaseModel):
-    response: str
+    data: Any
+
+class DocumentUploadResponse(BaseModel):
+    success: bool
+    message: str
 
 
 app = FastAPI(
@@ -102,10 +108,43 @@ async def chat_assistant(query: AssistantChatRequest):
     try:
         assistant = Assistant("general", query.session_id)
         response = assistant.chat(query.messages)
-        return AssistantChatResponse(response=response)
+        try:
+            # 尝试将字符串解析为JSON
+            parsed = json.loads(response)
+            return AssistantChatResponse(data=parsed)
+        except Exception:
+            # 不是标准JSON，原样返回
+            return AssistantChatResponse(data=response)
     except Exception as e:
         print(f"调用Assistant时发生错误: {e}")
         raise HTTPException(status_code=500, detail=f"服务器内部错误: {str(e)}")
+
+
+@app.post("/upload-document", response_model=DocumentUploadResponse)
+async def upload_document(
+    file: UploadFile = File(..., description="支持的文件类型: .txt, .pdf, .docx, .md, .xlsx, .csv"),
+    doc_id: str = "default",
+    knowledge_base: str = "default"
+):
+    """
+    上传文档（Word、Excel、PDF、TXT、Markdown、CSV），并添加到RAG知识库。
+    - 支持的文件类型: .txt, .pdf, .docx, .md, .xlsx, .csv
+    - 参数: doc_id（文档ID，可选），knowledge_base（知识库名，可选）
+    """
+    rag_manager = RAGManager()
+    # 保存上传的文件到临时路径
+    try:
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in [".txt", ".pdf", ".docx", ".md", ".xlsx", ".csv"]:
+            return DocumentUploadResponse(success=False, message=f"不支持的文件类型: {file_ext}")
+        temp_path = f"/tmp/{file.filename}"
+        with open(temp_path, "wb") as f:
+            f.write(await file.read())
+        rag_manager.add_document(temp_path, doc_id=doc_id, knowledge_base=knowledge_base)
+        os.remove(temp_path)
+        return DocumentUploadResponse(success=True, message="文档上传并添加成功")
+    except Exception as e:
+        return DocumentUploadResponse(success=False, message=f"上传失败: {str(e)}")
 
 
 @app.get("/")

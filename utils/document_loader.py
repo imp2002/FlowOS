@@ -7,7 +7,8 @@ from langchain_community.document_loaders import (
     PyPDFLoader, 
     UnstructuredMarkdownLoader,
     UnstructuredExcelLoader,
-    UnstructuredWordDocumentLoader
+    UnstructuredWordDocumentLoader,
+    UnstructuredCSVLoader
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
@@ -31,6 +32,8 @@ class DocumentProcessor:
             return UnstructuredMarkdownLoader(file_path)
         elif file_extension == '.xlsx':
             return UnstructuredExcelLoader(file_path)
+        elif file_extension == '.csv':
+            return UnstructuredCSVLoader(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
@@ -64,7 +67,7 @@ if __name__ == "__main__":
     document_processor = DocumentProcessor(chunk_size=10, chunk_overlap=2)
     # documents = document_processor.load_document("test.txt")
     # documents = document_processor.load_document("test.docx")
-    documents = document_processor.load_document("test.xlsx")
+    documents = document_processor.load_document("test.csv")
 
     print(documents)
     chunked_documents = document_processor.chunk_documents(documents)

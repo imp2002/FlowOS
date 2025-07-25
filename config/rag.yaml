@@ -16,6 +16,8 @@ supported_file_types:
   - ".docx"
   - ".md"
   - ".xlsx"
+  - ".csv"
+
 self_rag: false
 feedback:
   type: "aliyun"

@@ -20,6 +20,8 @@ WORKDIR /app/web
 RUN npm install && npm run build
 
 
+WORKDIR /app
+
 # 复制依赖文件
 COPY pyproject.toml uv.lock ./
 

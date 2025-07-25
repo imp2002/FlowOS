@@ -10,6 +10,7 @@ from chat.assistant import Assistant
 from typing import Optional, List, Any
 from rag.rag_manager import RAGManager
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # 从 .env 文件加载环境变量
@@ -53,6 +54,15 @@ if not api_key:
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.moonshot.cn/v1",
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        # 允许任何域
+    allow_credentials=True,     # 可以带 cookie 等凭证（设成 True 时才需要）
+    allow_methods=["*"],        # 允许任何 HTTP 方法
+    allow_headers=["*"],        # 允许任何请求头
 )
 
 # 挂载静态文件到根路径

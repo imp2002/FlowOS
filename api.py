@@ -2,7 +2,7 @@ import os
 import base64
 import json
 import re
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel, Field
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -11,6 +11,9 @@ from typing import Optional, List, Any
 from rag.rag_manager import RAGManager
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from config.database import get_db
+from models.chat_record import ChatRecord
 
 
 # 从 .env 文件加载环境变量
@@ -38,6 +41,12 @@ class AssistantChatResponse(BaseModel):
 class DocumentUploadResponse(BaseModel):
     success: bool
     message: str
+
+class ChatRecordResponse(BaseModel):
+    id: int
+    session_id: Optional[str]
+    messages: str
+    created_at: str
 
 
 app = FastAPI(
@@ -113,14 +122,33 @@ async def describe_image(query: ImageQuery):
 
 
 @app.post("/chat-assistant", response_model=AssistantChatResponse)
-async def chat_assistant(query: AssistantChatRequest):
+async def chat_assistant(query: AssistantChatRequest, db: Session = Depends(get_db)):
     """
     使用 Assistant 聊天能力。
     assistant_type: 助手类型，如 'general'。
     session_id: 可选，会话ID。
     messages: 聊天消息历史。
     """
-    try:
+    try:        
+        # 记录请求到数据库
+        try:
+            
+            # 确保messages是字符串格式
+            messages_json = json.dumps(query.messages, ensure_ascii=False)
+            
+            chat_record = ChatRecord(
+                session_id=query.session_id,
+                messages=messages_json
+            )
+            
+            db.add(chat_record)            
+            db.commit()
+            
+        except Exception as db_error:
+            import traceback
+            # 数据库错误不应该影响聊天功能，所以继续执行
+            db.rollback()
+        
         assistant = Assistant("general", query.session_id)
         response = assistant.chat(query.messages)
         try:

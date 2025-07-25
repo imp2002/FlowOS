@@ -1,6 +1,7 @@
 import os
 import base64
 import json
+import re
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel, Field
 from openai import OpenAI
@@ -109,9 +110,16 @@ async def chat_assistant(query: AssistantChatRequest):
         assistant = Assistant("general", query.session_id)
         response = assistant.chat(query.messages)
         try:
-            # 尝试将字符串解析为JSON
-            parsed = json.loads(response)
-            return AssistantChatResponse(data=parsed)
+            # 使用正则表达式提取json数组
+            match = re.search(r'(\[.*?\])', response, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                parsed = json.loads(json_str)
+                return AssistantChatResponse(data=parsed)
+            else:
+                # 没有匹配到json数组，尝试直接解析
+                parsed = json.loads(response)
+                return AssistantChatResponse(data=parsed)
         except Exception:
             # 不是标准JSON，原样返回
             return AssistantChatResponse(data=response)
@@ -149,7 +157,7 @@ async def upload_document(
 
 @app.get("/")
 def read_root():
-    return {"message": "欢迎使用 Kimi Vision API Wrapper. 请访问 /docs 查看API文档。"}
+    return {"message": "欢迎使用"}
 
 if __name__ == "__main__":
     import uvicorn

@@ -20,6 +20,7 @@ dependencies = [
     "paddleocr>=3.1.0",
     "pandas>=2.3.1",
     "python-docx>=1.2.0",
+    "python-multipart>=0.0.20",
     "unstructured==0.17.2",
     "uvicorn>=0.35.0",
 ]

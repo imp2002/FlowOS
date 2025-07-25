@@ -130,15 +130,31 @@ export const apiService = {
     }
   },
 
-  // 检查API状态
-  checkApiStatus: async () => {
+
+
+  // 调用聊天助手API（新增）
+  askChatAssistant: async (message, sessionId = 'default') => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/health`, {
-        timeout: 5000
+      const response = await fetch(`${API_BASE_URL}/chat-assistant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          messages: message
+        })
       });
-      return response.status === 200 ? 'online' : 'offline';
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
-      return 'offline';
+      console.error('聊天助手API调用失败:', error);
+      throw error;
     }
   }
 };

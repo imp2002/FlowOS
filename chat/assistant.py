@@ -4,6 +4,7 @@ from typing import Optional
 
 from config.config_manager import ConfigManager
 from chat.model_manager import ModelManager
+from rag import rag_manager
 from rag.rag_manager import RAGManager
 
 class Assistant:
@@ -100,10 +101,11 @@ if __name__ == "__main__":
             print()
 
     def test_rag():
-        assistant = Assistant("knowledgebase")
-        assistant.rag_manager.add_document("../rag/test.txt")
+        assistant = Assistant("general")
+        assistant.rag_manager.clear_database()
+        assistant.rag_manager.add_excel("./rag/data2.xlsx", doc_id="default", knowledge_base="default")
         # print(assistant.rag_manager.get_document_count())
-        print(assistant.chat(["吉林大学"]))
+        print(assistant.chat(["前端"]))
         # print(assistant.chat(["你知道方德吗"]))
     # test_assistant_and_session()
     test_stream()

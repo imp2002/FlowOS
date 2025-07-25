@@ -1,6 +1,7 @@
 import os
 import base64
 import json
+import re
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel, Field
 from openai import OpenAI
@@ -8,6 +9,9 @@ from dotenv import load_dotenv
 from chat.assistant import Assistant
 from typing import Optional, List, Any
 from rag.rag_manager import RAGManager
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # 从 .env 文件加载环境变量
 load_dotenv()
@@ -51,6 +55,17 @@ client = OpenAI(
     api_key=api_key,
     base_url="https://api.moonshot.cn/v1",
 )
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        # 允许任何域
+    allow_credentials=True,     # 可以带 cookie 等凭证（设成 True 时才需要）
+    allow_methods=["*"],        # 允许任何 HTTP 方法
+    allow_headers=["*"],        # 允许任何请求头
+)
+
+
 
 @app.post("/describe-image", response_model=DescriptionResponse)
 async def describe_image(query: ImageQuery):
@@ -109,9 +124,16 @@ async def chat_assistant(query: AssistantChatRequest):
         assistant = Assistant("general", query.session_id)
         response = assistant.chat(query.messages)
         try:
-            # 尝试将字符串解析为JSON
-            parsed = json.loads(response)
-            return AssistantChatResponse(data=parsed)
+            # 使用正则表达式提取json数组
+            match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                parsed = json.loads(json_str.strip())
+                return AssistantChatResponse(data=parsed)
+            else:
+                # 没有匹配到json数组，尝试直接解析
+                parsed = json.loads(response)
+                return AssistantChatResponse(data=parsed)
         except Exception:
             # 不是标准JSON，原样返回
             return AssistantChatResponse(data=response)
@@ -147,9 +169,8 @@ async def upload_document(
         return DocumentUploadResponse(success=False, message=f"上传失败: {str(e)}")
 
 
-@app.get("/")
-def read_root():
-    return {"message": "欢迎使用 Kimi Vision API Wrapper. 请访问 /docs 查看API文档。"}
+# 挂载静态文件到根路径
+app.mount("/", StaticFiles(directory="web/build", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

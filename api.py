@@ -111,10 +111,10 @@ async def chat_assistant(query: AssistantChatRequest):
         response = assistant.chat(query.messages)
         try:
             # 使用正则表达式提取json数组
-            match = re.search(r'(\[.*?\])', response, re.DOTALL)
+            match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)
             if match:
                 json_str = match.group(1)
-                parsed = json.loads(json_str)
+                parsed = json.loads(json_str.strip())
                 return AssistantChatResponse(data=parsed)
             else:
                 # 没有匹配到json数组，尝试直接解析

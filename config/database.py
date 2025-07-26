@@ -15,7 +15,6 @@ DB_NAME = os.getenv("DB_NAME", "er_chat")
 
 # 构建数据库URL
 DATABASE_URL = os.getenv("MYSQL_URL")
-# DATABASE_URL = r"mysql+pymysql://root:XylfMjHOdWCwEIPoACeJKQAJyghcjAgo@switchyard.proxy.rlwy.net:53718/railway"
 
 # 创建数据库引擎
 engine = create_engine(

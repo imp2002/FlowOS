@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from config.database import get_db
 from models.chat_record import ChatRecord
+from langchain_core.documents import Document
 
 
 # 从 .env 文件加载环境变量
@@ -149,8 +150,23 @@ async def chat_assistant(query: AssistantChatRequest, db: Session = Depends(get_
             # 数据库错误不应该影响聊天功能，所以继续执行
             db.rollback()
         
+
+        doc = Document(
+            page_content=query.messages[-1],
+            metadata={
+                "source": query.session_id,
+                "name": "chat_record",
+                "knowledge_base": "default"
+            }
+        )
+        
+
         assistant = Assistant("general", query.session_id)
         response = assistant.chat(query.messages)
+
+        rag_manager = RAGManager()
+        rag_manager.vector_db.add_documents(documents=[doc])
+        # print(rag_manager.vector_db.similarity_search(query.messages[-1], k=1))
         try:
             # 使用正则表达式提取json数组
             match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)

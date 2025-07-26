@@ -1,7 +1,7 @@
 vector_db:
   type: "chroma"
   collection_name: "documents"
-  persist_directory: ".db/chroma_db"
+  persist_directory: "chroma/chroma_db"
 
 embeddings:
   type: "dashscope"

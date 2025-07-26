@@ -1,7 +1,9 @@
 vector_db:
-  type: "chroma"
+  type: "milvus"
   collection_name: "documents"
-  persist_directory: "chroma/chroma_db"
+  uri: "https://in03-64eca050ccbbca9.serverless.aws-eu-central-1.cloud.zilliz.com"
+  token: "${MILVUS_TOKEN}"
+  database: "default"
 
 embeddings:
   type: "dashscope"

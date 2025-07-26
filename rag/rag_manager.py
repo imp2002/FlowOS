@@ -3,8 +3,9 @@ import pandas as pd
 from typing import Dict, Any, List, Optional
 import os
 from pathlib import Path
-from langchain_chroma import Chroma
+from pymilvus import connections, Collection, CollectionSchema, FieldSchema, DataType, utility
 from langchain_community.embeddings import DashScopeEmbeddings
+from langchain_community.vectorstores import Milvus
 from utils.document_loader import DocumentProcessor
 from utils.decorators import singleton
 from config.config_manager import ConfigManager
@@ -60,19 +61,25 @@ class RAGManager:
     def _initialize_vector_db(self):
         """Initialize the vector database"""
         try:
-            persist_directory = self.config['vector_db']['persist_directory']
+            # 连接到Zilliz Cloud Milvus
+            connections.connect(
+                alias="default",
+                uri=self.config['vector_db']['uri'],
+                token=self.config['vector_db']['token'],
+                db_name=self.config['vector_db']['database']
+            )
+            
             collection_name = self.config['vector_db']['collection_name']
             
-            # Create directory if it doesn't exist
-            chromadb_dir = os.path.expanduser(persist_directory)
-            if not os.path.exists(chromadb_dir):
-                os.makedirs(chromadb_dir)
-                
-            # Initialize Chroma
-            self.vector_db = Chroma(
-                persist_directory=chromadb_dir,
+            # 初始化Milvus向量存储
+            self.vector_db = Milvus(
                 embedding_function=self.embedding,
-                collection_name=collection_name
+                collection_name=collection_name,
+                connection_args={
+                    "uri": self.config['vector_db']['uri'],
+                    "token": self.config['vector_db']['token'],
+                    "db_name": self.config['vector_db']['database']
+                }
             )
         except Exception as e:
             print(f"Error initializing vector database: {str(e)}")
@@ -97,7 +104,8 @@ class RAGManager:
                 doc.metadata["knowledge_base"] = knowledge_base
             
             # Add to vector store
-            self.vector_db.add_documents(documents=chunked_documents, ids=[doc_id * len(chunked_documents)])
+            doc_ids = [f"{doc_id}-{idx}" for idx in range(len(chunked_documents))]
+            self.vector_db.add_documents(documents=chunked_documents, ids=doc_ids)
             
             return True
         except Exception as e:
@@ -116,12 +124,18 @@ class RAGManager:
     def base_search(self, query: str, k: int = 3, knowledge_bases: Optional[List[str]] = "default") -> List[Dict[str, Any]]:
         """Search for relevant documents based on a query with optional knowledge base filtering"""
         try:
-            # Set up where filter if knowledge_bases are specified
-            where_filter = {"knowledge_base": {"$in": knowledge_bases}}
+            # 对于Milvus，我们需要构建过滤表达式
+            filter_expr = None
+            if knowledge_bases and knowledge_bases != "default":
+                if isinstance(knowledge_bases, list) and len(knowledge_bases) > 0:
+                    # 构建OR表达式
+                    expr_parts = [f'knowledge_base == "{kb}"' for kb in knowledge_bases]
+                    filter_expr = " || ".join(expr_parts)
+            
             results = self.vector_db.similarity_search_with_score(
                 query=query,
                 k=k,
-                # filter=where_filter
+                # filter=filter_expr
             )
             
             # Format results
@@ -156,7 +170,9 @@ class RAGManager:
     def clear_database(self) -> bool:
         """Clear all documents from the vector database"""
         try:
-            self.vector_db.delete_collection()
+            collection_name = self.config['vector_db']['collection_name']
+            if utility.has_collection(collection_name):
+                utility.drop_collection(collection_name)
             self._initialize_vector_db()
             return True
         except Exception as e:
@@ -166,14 +182,17 @@ class RAGManager:
     def get_chunk_count(self, knowledge_base: Optional[str] = None) -> int:
         """Get the total number of documents, optionally filtered by knowledge base"""
         try:
-            if knowledge_base:
-                results = self.vector_db._collection.get(
-                    include=[],  # Don't need document content
-                    where={"knowledge_base": knowledge_base}
-                )
-                return len(results['ids'])
-            else:
-                return self.vector_db._collection.count()
+            collection_name = self.config['vector_db']['collection_name']
+            if utility.has_collection(collection_name):
+                collection = Collection(collection_name)
+                collection.load()
+                if knowledge_base:
+                    # 对于Milvus，我们需要使用表达式来过滤
+                    expr = f'knowledge_base == "{knowledge_base}"'
+                    return collection.num_entities
+                else:
+                    return collection.num_entities
+            return 0
         except Exception as e:
             print(f"Error getting document count: {str(e)}")
             return 0
@@ -316,7 +335,7 @@ class RAGManager:
             for doc in chunked_documents:
                 if "knowledge_base" not in doc.metadata:
                     doc.metadata["knowledge_base"] = knowledge_base
-            doc_ids = [f"{doc_id}-{idx}" for idx in range(len(chunked_documents))]
+            doc_ids = [f"{doc_id}-{idx}" for idx in range(len(all_documents))]
             self.vector_db.add_documents(documents=all_documents, ids=doc_ids)
             print(f"Successfully added {len(chunked_documents)} chunks from {file_path} to knowledge base '{knowledge_base}'.")
             return True
@@ -326,7 +345,7 @@ class RAGManager:
 
 if __name__ == "__main__":
     rag_manager = RAGManager()
-    rag_manager.clear_database()
+    # rag_manager.clear_database()
     # 在 kb1 中添加文档
     rag_manager.add_document("C:\\Users\\imp\\Desktop\\er\\rag\\report.docx", doc_id="default", knowledge_base="default")
     print(f"测试在kb1中检索: {rag_manager.get_relevant_context('吉林大学', k=3, knowledge_bases=['default'])}")

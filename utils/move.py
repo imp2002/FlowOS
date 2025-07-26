@@ -29,7 +29,8 @@ try:
     elif not source_folder.is_dir():
         print(f"错误：源文件夹 '{source_folder}' 不存在或不是一个目录。")
     else:
-        shutil.copytree(str(source_folder), str(target_dir), dirs_exist_ok=True)
+        pass
+        # shutil.copytree(str(source_folder), str(target_dir), dirs_exist_ok=True)
 
 
 except FileNotFoundError:

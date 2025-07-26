@@ -154,7 +154,7 @@ async def chat_assistant(query: AssistantChatRequest, db: Session = Depends(get_
         doc = Document(
             page_content=query.messages[-1],
             metadata={
-                "source": f"chat_record",
+                "source": query.session_id,
                 "name": "chat_record",
                 "knowledge_base": "default"
             }
@@ -165,8 +165,8 @@ async def chat_assistant(query: AssistantChatRequest, db: Session = Depends(get_
         response = assistant.chat(query.messages)
 
         rag_manager = RAGManager()
-        rag_manager.vector_db.add_documents(documents=[doc], ids=[doc.metadata["source"]])
-
+        rag_manager.vector_db.add_documents(documents=[doc])
+        # print(rag_manager.vector_db.similarity_search(query.messages[-1], k=1))
         try:
             # 使用正则表达式提取json数组
             match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)

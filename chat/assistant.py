@@ -102,10 +102,10 @@ if __name__ == "__main__":
 
     def test_rag():
         assistant = Assistant("general")
-        assistant.rag_manager.clear_database()
-        assistant.rag_manager.add_excel("./rag/data2.xlsx", doc_id="default", knowledge_base="default")
+        # assistant.rag_manager.clear_database()
+        assistant.rag_manager.add_json("./rag/cleaned2.json", doc_id="default", knowledge_base="default")
         # print(assistant.rag_manager.get_document_count())
-        print(assistant.chat(["前端"]))
+        print(assistant.chat(["我想找一些前端开发"]))
         # print(assistant.chat(["你知道方德吗"]))
     # test_assistant_and_session()
-    test_stream()
+    test_rag()

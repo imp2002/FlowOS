@@ -7,4 +7,7 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  corePlugins: {
+    // 禁用可能导致问题的核心插件
+  }
 }

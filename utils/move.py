@@ -29,21 +29,8 @@ try:
     elif not source_folder.is_dir():
         print(f"错误：源文件夹 '{source_folder}' 不存在或不是一个目录。")
     else:
-        # 使用 iterdir() 获取目录内容，并检查它是否能产生任何项
-        # any() 函数在一个迭代器上检查，只要有一个元素就返回 True，效率很高
-        if db_path.exists() and db_path.is_dir() and not any(db_path.iterdir()):
-            print(f"目标目录 '{target_dir}' 空。")
-            print(f"准备将文件夹 '{source_folder}' 移动到 '{target_dir}'...")
+        shutil.copytree(str(source_folder), str(target_dir), dirs_exist_ok=True)
 
-            # 执行移动操作
-            shutil.copytree(str(source_folder), str(target_dir), dirs_exist_ok=True)
-            # shutil.move(str(source_folder), str(target_dir))
-            
-            # 移动后，源文件夹会成为目标目录的子文件夹
-            final_path = target_dir / source_folder.name
-            print(f"移动成功！文件夹现在位于: {final_path}")
-        else:
-            print(f"目标目录 '{target_dir}' 不为空，不执行任何操作。")
 
 except FileNotFoundError:
     print("错误：指定的路径之一不存在。")

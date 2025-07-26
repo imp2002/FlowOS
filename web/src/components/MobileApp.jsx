@@ -46,7 +46,7 @@ const MobileApp = () => {
       {
         id: 1,
         type: MESSAGE_TYPES.AI,
-        content: '欢迎使用搭子人员搜索！🔍\n\n请告诉我您需要什么样的搭子，比如：\n• "给我找一些后端工程师"\n• "我需要会Python的开发者"\n• "找一些有创意的设计师"\n\n我会为您搜索并推荐合适的搭子！',
+        content: '欢迎使用搭子人员搜索！🔍\n\n请告诉我您需要什么样的搭子，比如：\n• "我想认识一些具身智能机器人的朋友"\n• "我想认识一些设计人员"\n• "我需要会Python和机器学习的开发者"\n\n我会为您搜索并推荐合适的搭子！',
         timestamp: new Date().toLocaleTimeString()
       }
     ];
@@ -346,10 +346,9 @@ const MobileApp = () => {
                 <h3 className="font-semibold text-slate-700 mb-3 text-sm">🚀 快速开始</h3>
                 <div className="space-y-2">
                   {[
-                    "我想找一个一起健身的搭子",
-                    "寻找喜欢看电影的朋友",
-                    "想找个一起学习的伙伴",
-                    "找个一起旅行的搭子"
+                    "我想认识一些具身智能机器人的朋友",
+                    "我想认识一些设计人员",
+                    "我需要会Python和机器学习的开发者"
                   ].map((text, index) => (
                     <button
                       key={index}
@@ -398,7 +397,7 @@ const MobileApp = () => {
                 : message.type === MESSAGE_TYPES.ERROR
                 ? 'bg-red-50 border border-red-200 text-red-700'
                 : message.type === MESSAGE_TYPES.PUSH
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 cursor-pointer hover:from-green-100 hover:to-emerald-100 transition-all duration-200 transform hover:scale-[1.02]'
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 cursor-pointer hover:from-green-100 hover:to-emerald-100 transition-all duration-200'
                 : 'bg-white border border-slate-200 text-slate-700'
             }`}
             onClick={message.type === MESSAGE_TYPES.PUSH ? () => handlePushClick(message.peopleData) : undefined}
@@ -417,7 +416,37 @@ const MobileApp = () => {
                     <span>{message.content}</span>
                   </div>
                 ) : (
-                  message.content
+                  <div className="whitespace-pre-wrap">
+                    {message.content.split('\n').map((line, index) => {
+                      // 处理列表项
+                      if (line.startsWith('• ') || line.startsWith('→ ') || line.startsWith('✨ ') || line.startsWith('🎯 ')) {
+                        return (
+                          <div key={index} className="ml-2 mb-1">
+                            {line}
+                          </div>
+                        );
+                      }
+                      // 处理标题行（包含 ** 的行）
+                      if (line.includes('**') && line.includes('**')) {
+                        const parts = line.split('**');
+                        return (
+                          <div key={index} className="mb-2">
+                            {parts.map((part, partIndex) => 
+                              partIndex % 2 === 1 ? 
+                                <strong key={partIndex} className="font-semibold text-slate-800">{part}</strong> : 
+                                part
+                            )}
+                          </div>
+                        );
+                      }
+                      // 普通行
+                      return (
+                        <div key={index} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                          {line || '\u00A0'}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
               
@@ -550,7 +579,7 @@ const MobileApp = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="描述你想找的搭子类型..."
+              placeholder="例如：我想认识一些具身智能机器人的朋友..."
               className="w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm max-h-[120px] bg-white/90"
               rows={1}
               disabled={isLoading}

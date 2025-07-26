@@ -15,3 +15,45 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* 滑窗动画效果 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 滑窗进入动画 */
+.animate-slide-up {
+  animation: slideInBottom 0.3s ease-out;
+}
+
+@keyframes slideInBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* 文本行数限制 */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 响应式适配 */
+@media (max-width: 640px) {
+  .line-clamp-3 {
+    -webkit-line-clamp: 2;
+  }
+}

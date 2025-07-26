@@ -133,21 +133,29 @@ export const apiService = {
 
 
   // 调用聊天助手API（新增）
-  askChatAssistant: async (message, sessionId = 'default') => {
+  askChatAssistant: async (message, sessionId = null) => {
     try {
+      // 生成UUID作为session_id
+      const uuid = sessionId || crypto.randomUUID();
+      
+      // 将message转换为messages数组格式
+      const messages = Array.isArray(message) ? message : [message];
+      
       const response = await fetch(`${API_BASE_URL}/chat-assistant`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          session_id: `${crypto.randomUUID()}-${Date.now()}`,
-          messages: message
+          session_id: uuid,
+          messages: messages
         })
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API响应错误:', response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
       }
       
       const data = await response.json();

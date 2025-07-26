@@ -25,7 +25,15 @@ Ollama-Qwen-0.5B:
   temperature: 0.7
   max_tokens: 8000
   api_base: "http://127.0.0.1:11434"
-    
+
+kimi:
+  type: "groq"
+  model_name: "moonshotai/kimi-k2-instruct"
+  temperature: 0.7
+  max_tokens: 8000
+  api_base: "https://api.groq.com/openai/v1/"
+  api_key: "${GROQ_API_KEY}"
+
 custom-model:
   type: "custom"
   model_name: "your-model-name"

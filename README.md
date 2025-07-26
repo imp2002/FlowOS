@@ -13,7 +13,8 @@ uv sync
 ```
 
 2. 运行
-在config下按照 .env.example 的格式创建 .env 文件
+   
+首先在config下按照 .env.example 的格式创建 .env 文件
 
 测试 RAG，往知识库中录数据和检索
 ```bash

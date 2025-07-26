@@ -57,6 +57,14 @@ class ModelManager:
                     base_url=model_config.get('api_base'),
                     temperature=model_config.get('temperature')
                 )
+            elif model_type == "groq":
+                self.models[model_name] = ChatOpenAI(
+                    model=model_config['model_name'],
+                    streaming=True,
+                    api_key=model_config.get('api_key'),
+                    base_url=model_config.get('api_base'),
+                    temperature=model_config.get('temperature')
+                )
     
     def get_model_config(self, model_name: str = None) -> Dict[str, Any]:
         """Get configuration for a specific model or all models"""

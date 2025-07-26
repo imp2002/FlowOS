@@ -5,7 +5,7 @@ const CHAT_ENDPOINT = '/chat-assistant';
 
 // Kimi API 配置
 const KIMI_API_BASE_URL = 'https://api.moonshot.cn/v1';
-const KIMI_API_KEY = 'sk-6KDgwhB3ab1bYWVTEkYOTybh2rX95jZlEceu0Jquyy1obQMd';
+const KIMI_API_KEY = '';
 const KIMI_MODEL = 'moonshot-v1-8k';
 
 export const apiService = {

@@ -46,7 +46,7 @@ const MobileApp = () => {
       {
         id: 1,
         type: MESSAGE_TYPES.AI,
-        content: '欢迎使用搭子人员搜索！🔍\n\n请告诉我您需要什么样的搭子，比如：\n• "给我找一些后端工程师"\n• "我需要会Python的开发者"\n• "找一些有创意的设计师"\n\n我会为您搜索并推荐合适的搭子！',
+        content: '欢迎使用搭子人员搜索！🔍\n\n请告诉我您需要什么样的搭子，比如：\n• "我想认识一些具身智能机器人的朋友"\n• "我想认识一些设计人员"\n• "我需要会Python和机器学习的开发者"\n\n我会为您搜索并推荐合适的搭子！',
         timestamp: new Date().toLocaleTimeString()
       }
     ];
@@ -550,7 +550,7 @@ const MobileApp = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="描述你想找的搭子类型..."
+              placeholder="例如：我想认识一些具身智能机器人的朋友..."
               className="w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm max-h-[120px] bg-white/90"
               rows={1}
               disabled={isLoading}

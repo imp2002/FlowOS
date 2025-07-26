@@ -1,8 +1,12 @@
 import pathlib
 import shutil
+from pathlib import Path
 
 # --- 1. 设置路径 ---
 # 请将这里的路径替换成你自己的实际路径
+
+db_path = Path("chroma/chroma_db")
+
 
 # 目标目录：需要判断是否为空的目录
 target_dir = pathlib.Path("./chroma")
@@ -27,7 +31,7 @@ try:
     else:
         # 使用 iterdir() 获取目录内容，并检查它是否能产生任何项
         # any() 函数在一个迭代器上检查，只要有一个元素就返回 True，效率很高
-        if not any(target_dir.iterdir()):
+        if db_path.exists() and db_path.is_dir() and not any(db_path.iterdir()):
             print(f"目标目录 '{target_dir}' 空。")
             print(f"准备将文件夹 '{source_folder}' 移动到 '{target_dir}'...")
 

@@ -346,10 +346,9 @@ const MobileApp = () => {
                 <h3 className="font-semibold text-slate-700 mb-3 text-sm">🚀 快速开始</h3>
                 <div className="space-y-2">
                   {[
-                    "我想找一个一起健身的搭子",
-                    "寻找喜欢看电影的朋友",
-                    "想找个一起学习的伙伴",
-                    "找个一起旅行的搭子"
+                    "我想认识一些具身智能机器人的朋友",
+                    "我想认识一些设计人员",
+                    "我需要会Python和机器学习的开发者"
                   ].map((text, index) => (
                     <button
                       key={index}
@@ -417,7 +416,37 @@ const MobileApp = () => {
                     <span>{message.content}</span>
                   </div>
                 ) : (
-                  message.content
+                  <div className="whitespace-pre-wrap">
+                    {message.content.split('\n').map((line, index) => {
+                      // 处理列表项
+                      if (line.startsWith('• ') || line.startsWith('→ ') || line.startsWith('✨ ') || line.startsWith('🎯 ')) {
+                        return (
+                          <div key={index} className="ml-2 mb-1">
+                            {line}
+                          </div>
+                        );
+                      }
+                      // 处理标题行（包含 ** 的行）
+                      if (line.includes('**') && line.includes('**')) {
+                        const parts = line.split('**');
+                        return (
+                          <div key={index} className="mb-2">
+                            {parts.map((part, partIndex) => 
+                              partIndex % 2 === 1 ? 
+                                <strong key={partIndex} className="font-semibold text-slate-800">{part}</strong> : 
+                                part
+                            )}
+                          </div>
+                        );
+                      }
+                      // 普通行
+                      return (
+                        <div key={index} className={line.trim() === '' ? 'mb-2' : 'mb-1'}>
+                          {line || '\u00A0'}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
               

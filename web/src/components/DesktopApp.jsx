@@ -825,14 +825,14 @@ function DesktopApp() {
             <div className="max-w-4xl mx-auto">
               {/* 现代化聊天输入框 */}
               <div className="relative">
-                <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 mx-4 shadow-xl border border-purple-200/40 transform transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+                <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 mx-4 shadow-xl border border-purple-200/40 transform transition-all duration-300 hover:shadow-2xl">
                   <div className="relative">
                     <textarea
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="请描述您需要什么样的人，例如：给我找一些后端工程师、我需要会Python的开发者、找一些有创意的设计师..."
-                      className="w-full px-6 py-4 pr-20 bg-gradient-to-r from-purple-50/50 to-pink-50/50 border border-purple-200/40 rounded-2xl focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-100/50 resize-none text-base text-slate-700 placeholder-purple-400/70 transition-all duration-300 ease-out focus:scale-[1.01] focus:shadow-lg"
+                      className="w-full px-6 py-4 pr-20 bg-gradient-to-r from-purple-50/50 to-pink-50/50 border border-purple-200/40 rounded-2xl focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-100/50 resize-none text-base text-slate-700 placeholder-purple-400/70 transition-all duration-300 ease-out focus:shadow-lg"
                       rows="2"
                       style={{ 
                         minHeight: '70px', 

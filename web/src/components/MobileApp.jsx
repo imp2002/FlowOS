@@ -398,7 +398,7 @@ const MobileApp = () => {
                 : message.type === MESSAGE_TYPES.ERROR
                 ? 'bg-red-50 border border-red-200 text-red-700'
                 : message.type === MESSAGE_TYPES.PUSH
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 cursor-pointer hover:from-green-100 hover:to-emerald-100 transition-all duration-200 transform hover:scale-[1.02]'
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 cursor-pointer hover:from-green-100 hover:to-emerald-100 transition-all duration-200'
                 : 'bg-white border border-slate-200 text-slate-700'
             }`}
             onClick={message.type === MESSAGE_TYPES.PUSH ? () => handlePushClick(message.peopleData) : undefined}

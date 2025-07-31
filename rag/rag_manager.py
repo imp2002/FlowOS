@@ -153,7 +153,7 @@ class RAGManager:
             print(f"Error searching: {str(e)}")
             return []
     
-    def get_relevant_context(self, query: str, k: int = 5, knowledge_bases: Optional[List[str]] = None) -> str:
+    def get_relevant_context(self, query: str, k: int = 6, knowledge_bases: Optional[List[str]] = None) -> str:
         """Get relevant context as a concatenated string for use in prompts"""
         results = self.search(query, k, knowledge_bases)
         
@@ -215,7 +215,7 @@ class RAGManager:
     def search(self, query: str, k: int = 3, knowledge_bases: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """搜索并优化结果（如果启用Self-RAG）"""
         # 获取原始搜索结果
-        raw_results = self.base_search(query, k*2, knowledge_bases)  # 获取双倍结果用于后续过滤
+        raw_results = self.base_search(query, k, knowledge_bases)  # 获取双倍结果用于后续过滤
         
         # 如果启用Self-RAG优化
         if self.self_rag_flag:

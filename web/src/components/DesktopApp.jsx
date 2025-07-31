@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { storageService } from '../services/storageService';
 import { analyzeUserProfile } from '../utils/profileAnalyzer';
 import { CONVERSATION_STAGES, MESSAGE_TYPES } from '../utils/constants';
-import PersonCard from './PersonCard';
+import PersonCard from './PersonCard.jsx';
 
 // 模拟人物库数据
 const mockPersonDatabase = [
@@ -609,6 +610,8 @@ function DesktopApp() {
             <h1 className="text-xl font-semibold text-slate-800">
               FlowOS
             </h1>
+            
+
             
             {/* 信息收集按钮 */}
             <a

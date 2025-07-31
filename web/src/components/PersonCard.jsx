@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useMobile } from '../hooks/useMobile';
+import { useMobile } from '../hooks/usemobile.js';
 
 const PersonCard = ({ person, index, onToggleSelect, isSelected }) => {
   const isMobile = useMobile();

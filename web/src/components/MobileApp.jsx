@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useMobile } from '../hooks/useMobile';
+import { Link } from 'react-router-dom';
+import { useMobile } from '../hooks/useMobile.js';
 import { apiService } from '../services/apiService';
 import { storageService } from '../services/storageService';
 import { MESSAGE_TYPES } from '../utils/constants';
@@ -308,14 +309,25 @@ const MobileApp = () => {
           </div>
         </div>
         
-        <button 
-          onClick={() => setShowWelcomeModal(true)}
-          className="p-2 hover:bg-white/50 rounded-lg transition-all duration-200 transform hover:scale-110"
-        >
-          <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </button>
+        <div className="flex items-center space-x-2">
+          <Link 
+            to="/knowledge-graph"
+            className="p-2 hover:bg-white/50 rounded-lg transition-all duration-200 transform hover:scale-110"
+          >
+            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </Link>
+          
+          <button 
+            onClick={() => setShowWelcomeModal(true)}
+            className="p-2 hover:bg-white/50 rounded-lg transition-all duration-200 transform hover:scale-110"
+          >
+            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* 欢迎弹窗 */}
